@@ -178,4 +178,3 @@ docker compose build ingress-api && docker compose up -d ingress-api
 - **Auth**: Add a simple bearer token for `/submit` if you want access control.
 - **Grafana**: Import a dashboard and scrape with Prometheus for pretty charts.
 
-Happy hacking! 🚀
