@@ -1,0 +1,14 @@
+{
+  "apiVersion": 1,
+  "providers": [
+    {
+      "name": "QC Dashboards",
+      "type": "file",
+      "disableDeletion": false,
+      "editable": true,
+      "options": {
+        "path": "/etc/grafana/provisioning/dashboards_json"
+      }
+    }
+  ]
+}

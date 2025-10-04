@@ -1,0 +1,88 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: qcdb
+      POSTGRES_USER: qcuser
+      POSTGRES_PASSWORD: qcpass
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports: ["15432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U qcuser -d qcdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports: ["5672:5672", "15672:15672"]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  ingress-api:
+    build: ./services/ingress-api
+    env_file: .env
+    volumes:
+      - ./data/uploads:/data/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    ports: ["8080:8080"]
+
+  results-api:
+    build: ./services/results-api
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports: ["8081:8080"]
+
+  qc-worker:
+    build: ./services/qc-worker
+    env_file: .env
+    volumes:
+      - ./data/uploads:/data/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    volumes:
+      - ./deploy/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    depends_on:
+      ingress-api:
+        condition: service_started
+      results-api:
+        condition: service_started
+      qc-worker:
+        condition: service_started
+    ports: ["9090:9090"]
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./deploy/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./deploy/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./deploy/grafana/provisioning/dashboards_json:/etc/grafana/provisioning/dashboards_json:ro
+    depends_on:
+      - prometheus
+    ports: ["3300:3000"]
+
+volumes:
+  pgdata:

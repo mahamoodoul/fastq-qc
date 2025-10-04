@@ -1,0 +1,78 @@
+{
+  "id": null,
+  "uid": "qc-overview",
+  "title": "FASTQ QC Overview",
+  "schemaVersion": 38,
+  "version": 1,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Jobs Processed",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 8,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "qc_jobs_processed_total"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Job Failures",
+      "gridPos": {
+        "x": 8,
+        "y": 0,
+        "w": 8,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "qc_jobs_failed_total"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Job Duration (ms)",
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 16,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(qc_job_duration_ms_bucket[1m])) by (le))"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "HTTP Requests (ingress-api)",
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 16,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "rate(http_requests_total[1m])"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list"
+        }
+      }
+    }
+  ],
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  }
+}
